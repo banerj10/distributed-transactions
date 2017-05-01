@@ -118,8 +118,6 @@ class ServerNetwork:
                     Storage.DataObj(msg.value)
             success = True
 
-        # TODO: handle abort cases when success == False
-
         response = SetMsgResponse(msg.uid, success)
         return response
 
@@ -163,8 +161,6 @@ class ServerNetwork:
             # then value will be = '' but success = True
             success = True
 
-        # TODO: handle abort cases when success == False
-
         response = GetMsgResponse(msg.uid, success, value)
         return response
 
@@ -192,8 +188,6 @@ class ServerNetwork:
                 if msg.txn_id < last_rd_txn or msg.txn_id < last_wr_txn:
                     success = False
                     break
-
-        # TODO: handle abort cases when success == False
 
         response = TryCommitMsgResponse(msg.uid, success)
         return response

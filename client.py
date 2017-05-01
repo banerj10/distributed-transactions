@@ -394,21 +394,10 @@ def main():
 
     main_task = evloop.create_task(client.loop())
 
-    # pending = None
     try:
         evloop.run_forever()
     except KeyboardInterrupt:
-        # pending = asyncio.Task.all_tasks(loop=evloop)
-        # for task in pending:
-        #     task.cancel()
         UI.log('BYE!')
-
-    # try:
-    #     evloop.run_until_complete(asyncio.gather(*pending))
-    # except asyncio.CancelledError:
-    #     pass
-    # finally:
-    #     evloop.close()
 
 if __name__ == '__main__':
     main()
