@@ -45,7 +45,7 @@ class Client:
 
 
 def main():
-    logging.basicConfig(filename='app.log', level=logging.DEBUG)
+    logging.basicConfig(filename='client.log', level=logging.DEBUG)
     UI.log('===========================================')
     UI.log('==== Distributed Transactions - Client ====')
     UI.log('===========================================')
