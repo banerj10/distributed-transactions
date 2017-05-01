@@ -54,7 +54,10 @@ class CommitMsg(BaseMsg):
 
 
 class CommitMsgResponse(BaseMsg):
-    pass
+    def __init__(self, orig_uid, response, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.orig_uid = orig_uid
+        self.response = response
 
 
 class AbortMsg(BaseMsg):
@@ -62,7 +65,9 @@ class AbortMsg(BaseMsg):
 
 
 class AbortMsgResponse(BaseMsg):
-    pass
+    def __init__(self, orig_uid, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.orig_uid = orig_uid
 
 
 
