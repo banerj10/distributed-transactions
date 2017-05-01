@@ -28,19 +28,54 @@ class Client:
             self.ui.output('')
             pass
 
+    # TODO: change 'dest' to appropriate destination (from data[1]) 
+
     async def cmd_begin(self, data):
-        pass
+    # call coordinator, receive message id
+        msg = RequestTxnID()
+        try:
+            await asyncio.wait_for(dest.send(msg), 2, loop=self.evloop)
+            await asyncio.wait_for(event.wait(), 3, loop=self.evloop)
+        except asyncio.TimeoutError:
+            logging.error('Failed to send beginMsg!')
+        # get TxnID from response message
+        # store TxnID in loop  
 
     async def cmd_set(self, data):
-        pass
+    # call server, deliver value
+        msg = SetMsg()
+        try:
+            await asyncio.wait_for(dest.send(msg), 2, loop=self.evloop)
+            await asyncio.wait_for(event.wait(), 3, loop=self.evloop)
+        except asyncio.TimeoutError:
+            logging.error('Failed to send setMsg!')
+        # wait for response message
+        # print "OK" to screen
+        UI.output("OK")
 
     async def cmd_get(self, data):
-        pass
+    # call server, receive value, display to screen
+        msg = GetMsg()
+        try:
+            await asyncio.wait_for(dest.send(msg), 2, loop=self.evloop)
+            await asyncio.wait_for(event.wait(), 3, loop=self.evloop)
+        except asyncio.TimeoutError:
+            logging.error('Failed to send getMsg!')
+        # get value from response message
+        # print output to screen
+        UI.output(str(data[1]) + " = " + str(value))
 
     async def cmd_commit(self, data):
-        pass
+    # call server, deliver commit or abort message
+        msg = CommitMsg()
+        try:
+            await asyncio.wait_for(dest.send(msg), 2, loop=self.evloop)
+            await asyncio.wait_for(event.wait(), 3, loop=self.evloop)
+        except asyncio.TimeoutError:
+            logging.error('Failed to send getMsg!')
 
     async def cmd_abort(self, data):
+    # call server, deliver abort
         pass
 
 
