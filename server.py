@@ -2,6 +2,7 @@ import asyncio
 import logging
 import pickle
 import socket
+import sys
 
 from messages import *
 import nodeslist
@@ -245,13 +246,19 @@ class ServerProtocol(asyncio.Protocol):
 
 
 def main():
-    logging.basicConfig(filename='server.log', level=logging.DEBUG)
+    debug = len(sys.argv) > 1 and sys.argv[1] == 'debug'
+
+    if debug:
+        logging.basicConfig(filename='server.log', level=logging.DEBUG)
+    else:
+        logging.basicConfig(filename='server.log', level=logging.INFO)
     UI.log('===========================================')
     UI.log('==== Distributed Transactions - Server ====')
     UI.log('===========================================')
 
     evloop = asyncio.get_event_loop()
-    evloop.set_debug(True)
+    if debug:
+        evloop.set_debug(True)
 
     server_network = ServerNetwork()
     main_task = evloop.create_task(server_network.create_server())

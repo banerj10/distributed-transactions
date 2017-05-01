@@ -2,6 +2,7 @@ import asyncio
 import logging
 import pickle
 import socket
+import sys
 
 from messages import NewTxnID
 from ui import UI
@@ -76,13 +77,19 @@ class CoordinatorProtocol(asyncio.Protocol):
 
 
 def main():
-    logging.basicConfig(filename='coordinator.log', level=logging.DEBUG)
+    debug = len(sys.argv) > 1 and sys.argv[1] == 'debug'
+
+    if debug:
+        logging.basicConfig(filename='coordinator.log', level=logging.DEBUG)
+    else:
+        logging.basicConfig(filename='server.log', level=logging.INFO)
     UI.log('================================================')
     UI.log('==== Distributed Transactions - Coordinator ====')
     UI.log('================================================')
 
     evloop = asyncio.get_event_loop()
-    evloop.set_debug(True)
+    if debug:
+        evloop.set_debug(True)
 
     coord_network = CoordinatorNetwork()
     main_task = evloop.create_task(coord_network.create_coordinator())

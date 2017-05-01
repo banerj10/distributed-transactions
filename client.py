@@ -2,6 +2,7 @@ import asyncio
 import logging
 import pickle
 import socket
+import sys
 
 from messages import *
 import nodeslist
@@ -189,6 +190,9 @@ class Client:
         if len(data) != 0:
             self.ui.output(f'Invalid! Usage: BEGIN')
             return
+        if self.curr_txn != -1:
+            self.ui.output('Invalid! Ongoing transaction!')
+            return
 
         txn_id_msg = RequestTxnID()
         event = asyncio.Event()
@@ -366,13 +370,19 @@ class Client:
 
 
 def main():
-    logging.basicConfig(filename='client.log', level=logging.DEBUG)
+    debug = len(sys.argv) > 1 and sys.argv[1] == 'debug'
+
+    if debug:
+        logging.basicConfig(filename='client.log', level=logging.DEBUG)
+    else:
+        logging.basicConfig(filename='client.log', level=logging.INFO)
     UI.log('===========================================')
     UI.log('==== Distributed Transactions - Client ====')
     UI.log('===========================================')
 
     evloop = asyncio.get_event_loop()
-    evloop.set_debug(True)
+    if debug:
+        evloop.set_debug(True)
     client = Client()
 
     main_task = evloop.create_task(client.loop())
