@@ -214,6 +214,9 @@ class Client:
         if len(data) < 2:
             self.ui.output(f'Invalid! Usage: SET <server>.<key> <value>')
             return
+        if self.curr_txn == -1:
+            self.ui.output(f'Invalid! Call BEGIN first!')
+            return
 
         server_name, key = data[0].split('.')
         value = ' '.join(data[1:])
@@ -253,6 +256,9 @@ class Client:
         """
         if len(data) != 1:
             self.ui.output(f'Invalid! Usage: GET <server>.<key>')
+            return
+        if self.curr_txn == -1:
+            self.ui.output(f'Invalid! Call BEGIN first!')
             return
 
         server_name, key = data[0].split('.')
@@ -296,6 +302,9 @@ class Client:
         if len(data) != 0:
             self.ui.output(f'Invalid! Usage: COMMIT')
             return
+        if self.curr_txn == -1:
+            self.ui.output(f'Invalid! Call BEGIN first!')
+            return
 
         events = []
         try_msgs = []
@@ -336,14 +345,21 @@ class Client:
             # TODO: handle abort
             self.ui.output('ABORT')
 
+        # finally...
+        for server in self.curr_txn_servers.keys():
+            self.curr_txn_servers[server] = False
+        self.curr_txn = -1
+
     async def cmd_abort(self, data):
-    # call server, deliver abort
-        msg = AbortMsg()
-        try:
-            await asyncio.wait_for(dest.send(msg), 2, loop=self.evloop)
-            await asyncio.wait_for(event.wait(), 3, loop=self.evloop)
-        except asyncio.TimeoutError:
-            logging.error('Failed to send abortMsg!')
+        """
+        Abort current transaction on all related servers
+        """
+        if len(data) != 0:
+            self.ui.output(f'Invalid! Usage: ABORT')
+            return
+        if self.curr_txn == -1:
+            self.ui.output(f'Invalid! Call BEGIN first!')
+            return
 
 
 def main():

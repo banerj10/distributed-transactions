@@ -209,7 +209,7 @@ class ServerNetwork:
         # update current txn ID for that client
         self.storage.set_buffer_txn(client_ip, -1)
 
-        for key, data_obj in self.storage.buffer(client_ip):
+        for key, data_obj in self.storage.buffer(client_ip).items():
             data = Storage.DataObj(data_obj.value, last_wr_txn=msg.txn_id)
             self.storage.actual()[key] = data
 
