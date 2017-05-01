@@ -44,7 +44,7 @@ class CoordinatorNetwork:
 
     def handle_RequestTxnID(self, msg):
         self.last_txn_id += 1
-        response = NewTxnID(self.last_txn_id)
+        response = NewTxnID(msg.uid, self.last_txn_id)
         return response
 
     def close(self):

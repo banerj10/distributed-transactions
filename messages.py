@@ -18,8 +18,9 @@ class RequestTxnID(BaseMsg):
 
 
 class NewTxnID(BaseMsg):
-    def __init__(self, txn_id, *args, **kwargs):
+    def __init__(self, orig_uid, txn_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.orig_uid = orig_uid
         self.txn_id = txn_id
 
 
