@@ -1,5 +1,6 @@
 import uuid
 
+
 class BaseMsg:
     def __init__(self, origin='', destination=''):
         self.uid = uuid.uuid4()
@@ -25,50 +26,55 @@ class NewTxnID(BaseMsg):
 
 
 class SetMsg(BaseMsg):
-    def __init__(self, key, value, *args, **kwargs):
+    def __init__(self, txn_id, key, value, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.txn_id = txn_id
         self.key = key
         self.value = value
 
 
 class SetMsgResponse(BaseMsg):
-    def __init__(self, orig_uid, *args, **kwargs):
+    def __init__(self, orig_uid, success, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.orig_uid = orig_uid
+        self.success = success
 
 
 class GetMsg(BaseMsg):
-    def __init__(self, key, *args, **kwargs):
+    def __init__(self, txn_id, key, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.txn_id = txn_id
         self.key = key
 
 
 class GetMsgResponse(BaseMsg):
-    def __init__(self, orig_uid, value, *args, **kwargs):
+    def __init__(self, orig_uid, success, value='', *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.orig_uid = orig_uid
+        self.success = success
         self.value = value
 
 
 class CommitMsg(BaseMsg):
-    pass
+    def __init__(self, txn_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.txn_id = txn_id
 
 
 class CommitMsgResponse(BaseMsg):
-    def __init__(self, orig_uid, response, *args, **kwargs):
+    def __init__(self, orig_uid, success, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.orig_uid = orig_uid
-        self.response = response
+        self.success = success
 
 
 class AbortMsg(BaseMsg):
-    pass
+    def __init__(self, txn_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.txn_id = txn_id
 
 
 class AbortMsgResponse(BaseMsg):
     def __init__(self, orig_uid, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.orig_uid = orig_uid
-
-
-
