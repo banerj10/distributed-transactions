@@ -386,6 +386,7 @@ def main():
         logging.basicConfig(filename='client.log', level=logging.DEBUG)
     else:
         logging.basicConfig(filename='client.log', level=logging.INFO)
+
     UI.log('===========================================')
     UI.log('==== Distributed Transactions - Client ====')
     UI.log('===========================================')

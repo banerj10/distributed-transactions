@@ -78,9 +78,3 @@ class AbortMsg(BaseMsg):
     def __init__(self, txn_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.txn_id = txn_id
-
-
-class AbortMsgResponse(BaseMsg):
-    def __init__(self, orig_uid, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.orig_uid = orig_uid
