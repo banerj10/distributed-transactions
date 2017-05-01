@@ -196,7 +196,7 @@ class ServerProtocol(asyncio.Protocol):
 
 
 def main():
-    logging.basicConfig(filename='coordinator.log', level=logging.DEBUG)
+    logging.basicConfig(filename='server.log', level=logging.DEBUG)
     UI.log('===========================================')
     UI.log('==== Distributed Transactions - Server ====')
     UI.log('===========================================')
