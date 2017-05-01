@@ -161,7 +161,7 @@ class Client:
 
         try:
             while True:
-                command = await self.ui.input()
+                command = await self.ui.input(prompt='')
                 if command == '':
                     continue
 
