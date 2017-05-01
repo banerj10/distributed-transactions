@@ -311,7 +311,7 @@ class Client:
                 self.network.events()[try_commit_msg.uid] = event, None
                 self.network.servers()[server].send(try_commit_msg)
 
-        done, pending = await asyncio.wait(events, 3)
+        done, pending = await asyncio.wait(events, timeout=3)
         success = True
 
         for try_msg in try_msgs:

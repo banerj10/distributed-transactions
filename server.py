@@ -182,7 +182,7 @@ class ServerNetwork:
         success = True
 
         # try to see if its possible to store each key in the actual store
-        for key, data_obj in self.storage.buffer(client_ip):
+        for key, data_obj in self.storage.buffer(client_ip).items():
             if key in self.storage.actual():
                 last_rd_txn = self.storage.actual()[key].last_rd_txn
                 last_wr_txn = self.storage.actual()[key].last_wr_txn
