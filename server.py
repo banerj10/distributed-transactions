@@ -72,7 +72,7 @@ class ServerNetwork:
             response.origin = ServerNetwork.SELF_ADDR
             response.destination = msg.origin
 
-            UI.log(f'Sending {type(response)}: {str(response)}')
+            UI.log(f'Sending {str(response)}')
             pickled = pickle.dumps(response, pickle.HIGHEST_PROTOCOL)
             transport.write(pickled)
 

@@ -55,17 +55,23 @@ class GetMsgResponse(BaseMsg):
         self.value = value
 
 
-class CommitMsg(BaseMsg):
+class TryCommitMsg(BaseMsg):
     def __init__(self, txn_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.txn_id = txn_id
 
 
-class CommitMsgResponse(BaseMsg):
+class TryCommitMsgResponse(BaseMsg):
     def __init__(self, orig_uid, success, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.orig_uid = orig_uid
         self.success = success
+
+
+class DoCommitMsg(BaseMsg):
+    def __init__(self, txn_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.txn_id = txn_id
 
 
 class AbortMsg(BaseMsg):

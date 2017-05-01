@@ -146,6 +146,10 @@ class Client:
         self.ui.output('===========================================')
 
         self.curr_txn = -1
+        self.curr_txn_servers = dict()
+
+        for server in self.network.servers().keys():
+            self.curr_txn_servers[server] = False
 
     async def loop(self):
         await self.network.connect_to_peers()
@@ -190,6 +194,7 @@ class Client:
             return
 
         response = self.network.events()[txn_id_msg.uid][1]
+        # del self.network.events()[txn_id_msg.uid]
         self.curr_txn = response.txn_id
 
         self.ui.output('OK')
@@ -224,7 +229,9 @@ class Client:
             self.ui.output('FAILED')
             return
 
+        self.curr_txn_servers[server_name] = True
         response = self.network.events()[set_msg.uid][1]
+        # del self.network.events()[set_msg.uid]
 
         if response.success:
             self.ui.output('OK')
@@ -262,6 +269,7 @@ class Client:
             return
 
         response = self.network.events()[get_msg.uid][1]
+        # del self.network.events()[get_msg.uid]
 
         if response.success:
             if response.value:
