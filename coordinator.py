@@ -82,7 +82,7 @@ def main():
     if debug:
         logging.basicConfig(filename='coordinator.log', level=logging.DEBUG)
     else:
-        logging.basicConfig(filename='server.log', level=logging.INFO)
+        logging.basicConfig(filename='coordinator.log', level=logging.INFO)
     UI.log('================================================')
     UI.log('==== Distributed Transactions - Coordinator ====')
     UI.log('================================================')
