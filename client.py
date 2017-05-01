@@ -72,11 +72,16 @@ class Client:
             await asyncio.wait_for(dest.send(msg), 2, loop=self.evloop)
             await asyncio.wait_for(event.wait(), 3, loop=self.evloop)
         except asyncio.TimeoutError:
-            logging.error('Failed to send getMsg!')
+            logging.error('Failed to send commitMsg!')
 
     async def cmd_abort(self, data):
     # call server, deliver abort
-        pass
+        msg = AbortMsg()
+        try:
+            await asyncio.wait_for(dest.send(msg), 2, loop=self.evloop)
+            await asyncio.wait_for(event.wait(), 3, loop=self.evloop)
+        except asyncio.TimeoutError:
+            logging.error('Failed to send abortMsg!')
 
 
 def main():
