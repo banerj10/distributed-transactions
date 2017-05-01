@@ -106,7 +106,7 @@ class ClientNetwork:
         def data_received(self, data):
             UI.log(f'Got data from {self.peer}')
             unpickled = pickle.loads(data)
-            self.req_handler(unpickled, self.transport)
+            self.req_handler(unpickled)
 
         def eof_received(self):
             pass
