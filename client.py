@@ -64,7 +64,7 @@ class ClientNetwork:
 
         async def connect(self):
             UI.log(f'Trying connect to {self.host}')
-            nodeip = socket.gethostbyname(socket.gethostname())
+            nodeip = socket.gethostbyname(self.host)
             try:
                 transport, proto = await self.evloop.create_connection(
                     lambda: ClientNetwork.ClientProtocol(self.request_handler),
