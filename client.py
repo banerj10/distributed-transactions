@@ -49,10 +49,26 @@ class ClientNetwork:
         if handler is None:
             UI.log(f'Dont recognize msg {cls}', level=logging.WARNING)
         else:
-            UI.log(f'Got {cls}')
+            UI.log(f'Got {str(msg)}')
             handler(msg)
 
     def handle_NewTxnID(self, msg):
+        orig_uid = msg.orig_uid
+        event, _ = self._events[orig_uid]
+        response = msg
+
+        self._events[orig_uid] = event, response
+        event.set()
+
+    def handle_SetMsgResponse(self, msg):
+        orig_uid = msg.orig_uid
+        event, _ = self._events[orig_uid]
+        response = msg
+
+        self._events[orig_uid] = event, response
+        event.set()
+
+    def handle_GetMsgResponse(self, msg):
         orig_uid = msg.orig_uid
         event, _ = self._events[orig_uid]
         response = msg
@@ -179,28 +195,83 @@ class Client:
         self.ui.output('OK')
 
     async def cmd_set(self, data):
-    # call server, deliver value
-        msg = SetMsg()
+        """
+        Call SET on server, deliver value
+        """
+        if len(data) < 2:
+            self.ui.output(f'Invalid! Usage: SET <server>.<key> <value>')
+            return
+
+        server_name, key = data[0].split('.')
+        value = ' '.join(data[1:])
+
+        set_msg = SetMsg(self.curr_txn, key, value)
+
+        server = self.network.servers().get(server_name, None)
+        if server is None:
+            self.ui.output(f'Invalid! "{server_name}" does not exist!')
+            return
+
+        event = asyncio.Event()
+        self.network.events()[set_msg.uid] = event, None
+
+        server.send(set_msg)
         try:
-            await asyncio.wait_for(dest.send(msg), 2, loop=self.evloop)
-            await asyncio.wait_for(event.wait(), 3, loop=self.evloop)
+            await asyncio.wait_for(event.wait(), 3)
         except asyncio.TimeoutError:
-            logging.error('Failed to send setMsg!')
-        # wait for response message
-        # print "OK" to screen
-        UI.output("OK")
+            # SHOULD NEVER HAPPEN
+            UI.log('Failed to send SetMsg!', level=logging.ERROR)
+            self.ui.output('FAILED')
+            return
+
+        response = self.network.events()[set_msg.uid][1]
+
+        if response.success:
+            self.ui.output('OK')
+        else:
+            # TODO: handle abort
+            self.ui.output('ABORT')
 
     async def cmd_get(self, data):
-    # call server, receive value, display to screen
-        msg = GetMsg()
+        """
+        Call GET on server, display value
+        """
+        if len(data) != 1:
+            self.ui.output(f'Invalid! Usage: GET <server>.<key>')
+            return
+
+        server_name, key = data[0].split('.')
+
+        get_msg = GetMsg(self.curr_txn, key)
+
+        server = self.network.servers().get(server_name, None)
+        if server is None:
+            self.ui.output(f'Invalid! "{server_name}" does not exist!')
+            return
+
+        event = asyncio.Event()
+        self.network.events()[get_msg.uid] = event, None
+
+        server.send(get_msg)
         try:
-            await asyncio.wait_for(dest.send(msg), 2, loop=self.evloop)
-            await asyncio.wait_for(event.wait(), 3, loop=self.evloop)
+            await asyncio.wait_for(event.wait(), 3)
         except asyncio.TimeoutError:
-            logging.error('Failed to send getMsg!')
-        # get value from response message
-        # print output to screen
-        UI.output(str(data[1]) + " = " + str(value))
+            # SHOULD NEVER HAPPEN
+            UI.log('Failed to send GetMsg!', level=logging.ERROR)
+            self.ui.output('FAILED')
+            return
+
+        response = self.network.events()[get_msg.uid][1]
+
+        if response.success:
+            if response.value:
+                self.ui.output(f'{data[0]} = {response.value}')
+            else:
+                # TODO: handle abort
+                self.ui.output('NOT FOUND')
+        else:
+            # TODO: handle abort
+            self.ui.output('ABORT')
 
     async def cmd_commit(self, data):
     # call server, deliver commit or abort message
@@ -233,20 +304,21 @@ def main():
 
     main_task = evloop.create_task(client.loop())
 
-    pending = None
+    # pending = None
     try:
         evloop.run_forever()
     except KeyboardInterrupt:
-        pending = asyncio.Task.all_tasks(loop=evloop)
-        for task in pending:
-            task.cancel()
+        # pending = asyncio.Task.all_tasks(loop=evloop)
+        # for task in pending:
+        #     task.cancel()
+        UI.log('BYE!')
 
-    try:
-        evloop.run_until_complete(asyncio.gather(*pending))
-    except asyncio.CancelledError:
-        pass
-    finally:
-        evloop.close()
+    # try:
+    #     evloop.run_until_complete(asyncio.gather(*pending))
+    # except asyncio.CancelledError:
+    #     pass
+    # finally:
+    #     evloop.close()
 
 if __name__ == '__main__':
     main()
