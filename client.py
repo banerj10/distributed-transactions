@@ -251,8 +251,7 @@ class Client:
         if response.success:
             self.ui.output('OK')
         else:
-            # TODO: handle abort
-            self.ui.output('ABORT')
+            await self.cmd_abort(list())
 
     async def cmd_get(self, data):
         """
@@ -293,11 +292,10 @@ class Client:
             if response.value:
                 self.ui.output(f'{data[0]} = {response.value}')
             else:
-                # TODO: handle abort
+                await self.cmd_abort(list(), output=False)
                 self.ui.output('NOT FOUND')
         else:
-            # TODO: handle abort
-            self.ui.output('ABORT')
+            await self.cmd_abort(list())
 
     async def cmd_commit(self, data):
         """
@@ -349,15 +347,14 @@ class Client:
                     self.network.servers()[server].send(do_commit_msg)
             self.ui.output('COMMIT OK')
         else:
-            # TODO: handle abort
-            self.ui.output('ABORT')
+            await self.cmd_abort(list())
 
         # finally...
         for server in self.curr_txn_servers.keys():
             self.curr_txn_servers[server] = False
         self.curr_txn = -1
 
-    async def cmd_abort(self, data):
+    async def cmd_abort(self, data, output=True):
         """
         Abort current transaction on all related servers
         """
@@ -368,6 +365,19 @@ class Client:
             self.ui.output(f'Invalid! Call BEGIN first!')
             return
 
+        # send a AbortMsg to all servers involved in current txn
+        for server, involved in self.curr_txn_servers.items():
+            if involved:
+                abort_msg = AbortMsg(self.curr_txn)
+                self.network.servers()[server].send(abort_msg)
+
+        # finally...
+        for server in self.curr_txn_servers.keys():
+            self.curr_txn_servers[server] = False
+        self.curr_txn = -1
+
+        if output:
+            self.ui.output('ABORT')
 
 def main():
     debug = len(sys.argv) > 1 and sys.argv[1] == 'debug'

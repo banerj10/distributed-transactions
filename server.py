@@ -210,9 +210,25 @@ class ServerNetwork:
         # update current txn ID for that client
         self.storage.set_buffer_txn(client_ip, -1)
 
+        # copy data from buffer to actual data
         for key, data_obj in self.storage.buffer(client_ip).items():
             data = Storage.DataObj(data_obj.value, last_wr_txn=msg.txn_id)
             self.storage.actual()[key] = data
+
+        # clear the buffer
+        self.storage.buffer(client_ip).clear()
+
+    def handle_AbortMsg(self, msg):
+        client_ip = msg.origin
+
+        if self.storage.buffer_txn(client_ip) > msg.txn_id:
+            curr_txn_id = self.storage.buffer_txn(client_ip)
+            UI.log(f'!!! TXN ORDERING VIOLATED !!!', level=logging.CRITICAL)
+            UI.log(f'RECVD {msg.txn_id} over {curr_txn_id}',
+                   level=logging.CRITICAL)
+
+        # update current txn ID for that client
+        self.storage.set_buffer_txn(client_ip, -1)
 
         # clear the buffer
         self.storage.buffer(client_ip).clear()
