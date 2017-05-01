@@ -150,10 +150,6 @@ class Client:
         self.ui = UI()
         self.network = ClientNetwork()
 
-        self.ui.output('===========================================')
-        self.ui.output('==== Distributed Transactions - Client ====')
-        self.ui.output('===========================================')
-
         self.curr_txn = -1
         self.curr_txn_servers = dict()
 
