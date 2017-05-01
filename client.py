@@ -320,20 +320,23 @@ class Client:
                 self.network.events()[try_commit_msg.uid] = event, None
                 self.network.servers()[server].send(try_commit_msg)
 
-        done, pending = await asyncio.wait(events, timeout=3)
         success = True
 
-        for try_msg in try_msgs:
-            if self.network.events()[try_msg.uid][1] is None:
-                success = False
-                break
-            if not self.network.events()[try_msg.uid][1].success:
-                success = False
-                break
-            # del self.network.events()[try_msg.uid]
+        # only do if there was any data to commit
+        if len(events) > 0:
+            done, pending = await asyncio.wait(events, timeout=3)
 
-        if len(pending) != 0:
-            success = False
+            for try_msg in try_msgs:
+                if self.network.events()[try_msg.uid][1] is None:
+                    success = False
+                    break
+                if not self.network.events()[try_msg.uid][1].success:
+                    success = False
+                    break
+                # del self.network.events()[try_msg.uid]
+
+            if len(pending) != 0:
+                success = False
 
         if success:
             for server, involved in self.curr_txn_servers.items():
