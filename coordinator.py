@@ -15,13 +15,13 @@ class CoordinatorNetwork:
         self.evloop = asyncio.get_event_loop()
         self.last_txn_id = 0
 
-    async def create_server(self):
-        self.server = await self.evloop.create_server(
+    async def create_coordinator(self):
+        self.coordinator = await self.evloop.create_server(
             lambda: CoordinatorProtocol(self.request_handler),
             port=CoordinatorNetwork.PORT, family=socket.AF_INET,
             reuse_address=True, reuse_port=True
         )
-        logging.info('Created server...')
+        UI.log('Created coordinator...')
 
     def request_handler(self, msg, transport):
         cls = msg.__class__.__name__
@@ -31,7 +31,7 @@ class CoordinatorNetwork:
             UI.log(f'Dont recognize msg {cls}', level=logging.WARNING)
             return
 
-        UI.log(f'Got {cls}')
+        UI.log(f'Got {str(msg)}')
         response = handler(msg)
 
         if response is not None:
@@ -48,7 +48,7 @@ class CoordinatorNetwork:
         return response
 
     def close(self):
-        self.server.close()
+        self.coordinator.close()
 
 
 class CoordinatorProtocol(asyncio.Protocol):
@@ -67,7 +67,7 @@ class CoordinatorProtocol(asyncio.Protocol):
         super().connection_lost(exc)
 
     def data_received(self, data):
-        logging.info(f'Got data from {self.peer}')
+        UI.log(f'Got data from {self.peer}')
         unpickled = pickle.loads(data)
         self.req_handler(unpickled, self.transport)
 
@@ -85,10 +85,11 @@ def main():
     evloop.set_debug(True)
 
     coord_network = CoordinatorNetwork()
-    main_task = evloop.create_task(coord_network.create_server())
+    main_task = evloop.create_task(coord_network.create_coordinator())
     try:
         evloop.run_forever()
     except KeyboardInterrupt:
+        coord_network.close()
         UI.log('BYE!')
 
 
