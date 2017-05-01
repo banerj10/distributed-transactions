@@ -76,6 +76,14 @@ class ClientNetwork:
         self._events[orig_uid] = event, response
         event.set()
 
+    def handle_TryCommitMsgResponse(self, msg):
+        orig_uid = msg.orig_uid
+        event, _ = self._events[orig_uid]
+        response = msg
+
+        self._events[orig_uid] = event, response
+        event.set()
+
 
     class Peer:
         def __init__(self, host, name, req_handler):
@@ -282,13 +290,51 @@ class Client:
             self.ui.output('ABORT')
 
     async def cmd_commit(self, data):
-    # call server, deliver commit or abort message
-        msg = CommitMsg()
-        try:
-            await asyncio.wait_for(dest.send(msg), 2, loop=self.evloop)
-            await asyncio.wait_for(event.wait(), 3, loop=self.evloop)
-        except asyncio.TimeoutError:
-            logging.error('Failed to send commitMsg!')
+        """
+        Call Commit on server, deliver value
+        """
+        if len(data) != 0:
+            self.ui.output(f'Invalid! Usage: COMMIT')
+            return
+
+        events = []
+        try_msgs = []
+        # send a TryCommitMsg to all servers involved in current txn
+        for server, involved in self.curr_txn_servers.items():
+            if involved:
+                try_commit_msg = TryCommitMsg(self.curr_txn)
+                event = asyncio.Event()
+
+                try_msgs.append(try_commit_msg)
+                events.append(event.wait())
+
+                self.network.events()[try_commit_msg.uid] = event, None
+                self.network.servers()[server].send(try_commit_msg)
+
+        done, pending = await asyncio.wait(events, 3)
+        success = True
+
+        for try_msg in try_msgs:
+            if self.network.events()[try_msg.uid][1] is None:
+                success = False
+                break
+            if not self.network.events()[try_msg.uid][1].success:
+                success = False
+                break
+            # del self.network.events()[try_msg.uid]
+
+        if len(pending) != 0:
+            success = False
+
+        if success:
+            for server, involved in self.curr_txn_servers.items():
+                if involved:
+                    do_commit_msg = DoCommitMsg(self.curr_txn)
+                    self.network.servers()[server].send(do_commit_msg)
+            self.ui.output('COMMIT OK')
+        else:
+            # TODO: handle abort
+            self.ui.output('ABORT')
 
     async def cmd_abort(self, data):
     # call server, deliver abort

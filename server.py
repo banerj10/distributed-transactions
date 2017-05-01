@@ -167,6 +167,55 @@ class ServerNetwork:
         response = GetMsgResponse(msg.uid, success, value)
         return response
 
+    def handle_TryCommitMsg(self, msg):
+        client_ip = msg.origin
+
+        if self.storage.buffer_txn(client_ip) > msg.txn_id:
+            curr_txn_id = self.storage.buffer_txn(client_ip)
+            UI.log(f'!!! TXN ORDERING VIOLATED !!!', level=logging.CRITICAL)
+            UI.log(f'RECVD {msg.txn_id} over {curr_txn_id}',
+                   level=logging.CRITICAL)
+
+        # update current txn ID for that client
+        self.storage.set_buffer_txn(client_ip, msg.txn_id)
+
+        success = True
+
+        # try to see if its possible to store each key in the actual store
+        for key, data_obj in self.storage.buffer(client_ip):
+            if key in self.storage.actual():
+                last_rd_txn = self.storage.actual()[key].last_rd_txn
+                last_wr_txn = self.storage.actual()[key].last_wr_txn
+
+                # check if DOES NOT have permission to write
+                if msg.txn_id < last_rd_txn or msg.txn_id < last_wr_txn:
+                    success = False
+                    break
+
+        # TODO: handle abort cases when success == False
+
+        response = TryCommitMsgResponse(msg.uid, success)
+        return response
+
+    def handle_DoCommitMsg(self, msg):
+        client_ip = msg.origin
+
+        if self.storage.buffer_txn(client_ip) > msg.txn_id:
+            curr_txn_id = self.storage.buffer_txn(client_ip)
+            UI.log(f'!!! TXN ORDERING VIOLATED !!!', level=logging.CRITICAL)
+            UI.log(f'RECVD {msg.txn_id} over {curr_txn_id}',
+                   level=logging.CRITICAL)
+
+        # update current txn ID for that client
+        self.storage.set_buffer_txn(client_ip, -1)
+
+        for key, data_obj in self.storage.buffer(client_ip):
+            data = Storage.DataObj(data_obj.value, last_wr_txn=msg.txn_id)
+            self.storage.actual()[key] = data
+
+        # clear the buffer
+        self.storage.buffer(client_ip).clear()
+
     def close(self):
         self.server.close()
 
