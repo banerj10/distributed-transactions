@@ -52,6 +52,14 @@ class ClientNetwork:
             UI.log(f'Got {cls}')
             handler(msg)
 
+    def handle_NewTxnID(self, msg):
+        orig_uid = msg.orig_uid
+        event, _ = self._events[orig_uid]
+        response = msg
+
+        self._events[orig_uid] = event, response
+        event.set()
+
 
     class Peer:
         def __init__(self, host, name, req_handler):
@@ -145,8 +153,6 @@ class Client:
             # self.network.close()
             self.ui.output('')
             pass
-
-    # TODO: change 'dest' to appropriate destination (from data[1])
 
     async def cmd_begin(self, data):
         """
